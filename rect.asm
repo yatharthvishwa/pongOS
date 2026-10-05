@@ -66,7 +66,7 @@ draw_rect:
 .row:
     push cx                 ;Saves the width value
     push di                 ;Saves the current memory position 
-    rep stosb               ;Writes CX pixels in a row,writes AL to [ES:DI],increments DI,decrements CX,repeats until CX == 0
+    rep stosb               ;Writes CX pixels in a row,writes byte AL to [ES:DI],increments DI,decrements CX,repeats until CX == 0
     pop di                  ;restore di
     add di, 320             ;move down one screen row
     pop cx
