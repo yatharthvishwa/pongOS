@@ -1,6 +1,19 @@
 [org 0x7c00]
 [bits 16]
 
+section .data:
+    ; coordinates and velocities are 16-bit words.
+    paddle1_y dw 88
+    paddle2_y dw 170
+
+    ball_x    dw 160
+    ball_y    dw 100
+    ball_dx   dw 1
+    ball_dy   dw 1
+
+    score1    db 0
+    score2    db 0
+
 start:
     cli                     ;disable interrupts
     xor ax, ax              ;set ax to 0
@@ -14,25 +27,26 @@ start:
     mov ax, 0x0013          ; VGA mode 13h: 320x200, 256 colors
     int 0x10                ;swtich to VGA
 
-    ; draw one rectangle (a paddle)
+    ; Paddle 1
     mov ax, 10              ; x
-    mov bx, 88              ; y
+    mov bx, [paddle1_y]     ; y
     mov cx, 4               ; width
     mov dx, 24              ; height
     mov si, 15              ; color (white)
-    call draw_rect          ;call :return here after jumping
+    ; call draw_rect          ;call :return here after jumping
+    call game_loop
 
     ; rectangle (a paddle)
     mov ax, 310              ; x
-    mov bx, 88              ; y
+    mov bx, [paddle2_y]      ; y
     mov cx, 4               ; width
     mov dx, 24              ; height
     mov si, 15              ; color (white)
     call draw_rect          ;call :return here after jumping
 
-    ; rectangle (a paddle)
-    mov ax, 160              ; x
-    mov bx, 88              ; y
+    ; Ball
+    mov ax, [ball_x]              ; x
+    mov bx, [ball_y]              ; y
     mov cx, 2               ; width
     mov dx, 2              ; height
     mov si, 15              ; color (white)
@@ -75,6 +89,29 @@ draw_rect:
     pop es
     popa
     ret
+
+game_loop:
+    ;read input
+    ; update positions
+    ; check collisions and scoring
+    ; redraw the screen
+    ; wait for the next frame
+    
+    ; cmp byte [paddle1_dir], 1
+    jne move_paddle_up
+
+    jmp game_loop
+
+move_paddle_up:
+    ; cmp word [paddle1_y], 0
+    ; jbe reverse_paddle_down
+    dec word [paddle1_y]
+    jmp paddle_moved
+
+paddle_moved:
+    ; redraw the paddle here using [paddle1_y]
+    call draw_rect
+    jmp game_loop
 
 times 510-($-$$) db 0
 dw 0xaa55
