@@ -6,7 +6,7 @@ jmp start
 
 ; coordinates and velocities are 16-bit words.
 paddle1_y dw 88
-paddle2_y dw 170
+paddle2_y dw 50
 
 ball_x    dw 160
 ball_y    dw 100
