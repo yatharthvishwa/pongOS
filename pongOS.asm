@@ -97,6 +97,31 @@ draw_rect:
 
 game_loop:
     ;read input
+
+    ; check for key
+    mov ah, 01h
+    int 16h
+    jz .no_key        ; no key pressed
+
+    mov ah, 00h
+    int 16h           ; AL = ASCII key, AH = scan code
+
+    cmp al, 'w'
+    je move_up
+    cmp al, 's'
+    je move_down
+    jmp .no_key
+
+.after_input:
+    ; redraw paddle
+    jmp draw_paddle
+    ; continue game logic
+
+.no_key:
+    ; no keyboard input
+
+    ; continue loop
+
     ; update positions
     ; check collisions and scoring
     ; redraw the screen
@@ -112,6 +137,7 @@ game_loop:
     call draw_rect
 
     ; Move down until reaching the bottom limit
+.move_down:
     cmp byte [paddle1_dir], 1
     jne move_up
 
@@ -125,13 +151,15 @@ start_moving_up:
     jmp draw_paddle
 
 move_up:
+    ;check the upper limit, upper limit of y = 0
     cmp word [paddle1_y], 0
-    jbe start_moving_down
-    dec word [paddle1_y]
+    jbe start_moving_down   ; start moving down when reached up, start_moving_down reverse the direction
+    ;if not reached up
+    dec word [paddle1_y]    ; -1 from the y coordinate to move the paddle up
     jmp draw_paddle
 
-start_moving_down:
-    mov byte [paddle1_dir], 1
+start_moving_down:   ;reverse the direction at the top
+    mov byte [paddle1_dir], 1        ;1 = down
 
 draw_paddle:
     ; Draw paddle 1 at its updated position
