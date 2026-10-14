@@ -6,6 +6,7 @@ jmp start
 
 ; coordinates and velocities are 16-bit words.
 paddle1_y dw 88
+paddle1_y_old dw 88
 paddle2_y dw 170
 
 ball_x    dw 160
@@ -96,9 +97,10 @@ draw_rect:
     ret
 
 game_loop:
-    ;read input
+    mov ax, [paddle1_y]
+    mov [paddle1_y_old], ax
 
-    ; check for key
+    ; read input
     mov ah, 01h
     int 16h
     jz .no_key        ; no key pressed
@@ -107,61 +109,55 @@ game_loop:
     int 16h           ; AL = ASCII key, AH = scan code
 
     cmp al, 'w'
-    je move_up
+    je .move_up
     cmp al, 's'
-    je move_down
+    je .move_down
     jmp .no_key
 
-.after_input:
-    ; redraw paddle
-    jmp draw_paddle
-    ; continue game logic
+.move_up:
+    cmp word [paddle1_y], 0
+    jbe .draw_paddle
+    dec word [paddle1_y]
+    jmp .draw_paddle
+
+.move_down:
+    cmp word [paddle1_y], 176 ; 200 screen pixels - 24 paddle pixels
+    jae .draw_paddle
+    inc word [paddle1_y]
+    jmp .draw_paddle
 
 .no_key:
-    ; no keyboard input
+    ; keep the old automatic motion when no key is pressed
+    cmp byte [paddle1_dir], 1
+    jne .move_up_auto
 
-    ; continue loop
+    cmp word [paddle1_y], 176 ; 200 screen pixels - 24 paddle pixels
+    jae .start_moving_up
+    inc word [paddle1_y]
+    jmp .draw_paddle
 
-    ; update positions
-    ; check collisions and scoring
-    ; redraw the screen
-    ; wait for the next frame
-    
+.start_moving_up:
+    mov byte [paddle1_dir], 0
+    jmp .draw_paddle
 
-    ; Erase paddle 1 at its current position
+.move_up_auto:
+    cmp word [paddle1_y], 0
+    jbe .start_moving_down
+    dec word [paddle1_y]
+    jmp .draw_paddle
+
+.start_moving_down:
+    mov byte [paddle1_dir], 1
+
+.draw_paddle:
+    ; Erase paddle 1 at its old position
     mov ax, 10
-    mov bx, [paddle1_y]
+    mov bx, [paddle1_y_old]
     mov cx, 4
     mov dx, 24
     xor si, si              ; color 0: black
     call draw_rect
 
-    ; Move down until reaching the bottom limit
-.move_down:
-    cmp byte [paddle1_dir], 1
-    jne move_up
-
-    cmp word [paddle1_y], 176 ; 200 screen pixels - 24 paddle pixels
-    jae start_moving_up
-    inc word [paddle1_y]
-    jmp draw_paddle
-
-start_moving_up:
-    mov byte [paddle1_dir], 0
-    jmp draw_paddle
-
-move_up:
-    ;check the upper limit, upper limit of y = 0
-    cmp word [paddle1_y], 0
-    jbe start_moving_down   ; start moving down when reached up, start_moving_down reverse the direction
-    ;if not reached up
-    dec word [paddle1_y]    ; -1 from the y coordinate to move the paddle up
-    jmp draw_paddle
-
-start_moving_down:   ;reverse the direction at the top
-    mov byte [paddle1_dir], 1        ;1 = down
-
-draw_paddle:
     ; Draw paddle 1 at its updated position
     mov ax, 10
     mov bx, [paddle1_y]
